@@ -11,7 +11,7 @@ export const DashboardCommand = ({ open, setOpen} : Props) => {
     return (
         <CommandDialog open={open} onOpenChange={setOpen}>
             <CommandInput 
-                placeholder="Find a meeting or a agent"
+                placeholder="Find a meeting or an agent"
             />
             <CommandList>
                 <CommandItem>
