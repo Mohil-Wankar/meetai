@@ -47,7 +47,7 @@ export const MeetingForm = ({
     const agents = useQuery(
         trpc.agents.getMany.queryOptions({
             pageSize: 100,
-            search: agentSearch,
+            search: agentSearch || undefined,
         }),
     );
 
