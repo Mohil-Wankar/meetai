@@ -42,7 +42,7 @@ const DisabledVideoPreview = () => {
 const AllowBrowserPermission = () => {
     return (
         <p className="text-sm">
-            Please allow your browser a permission to access your camera and microphone to join the call.
+            Please allow your browser permission to access your camera and microphone to join the call.
         </p>
     )
 };

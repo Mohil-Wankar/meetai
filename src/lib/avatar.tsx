@@ -12,7 +12,7 @@ export const generateAvatarUri = ({ seed, variant }: Props) =>{
     if (variant === "botttsNeutral") {
         avatar = createAvatar(botttsNeutral, { seed });
     }
-    if (variant === "micah") {
+    else if (variant === "micah") {
         avatar = createAvatar(micah, { seed });
     }
     else {
