@@ -30,6 +30,14 @@ export const GeneratedAvatar = ({
     } else {
         avatar = createAvatar(micah, {
             seed,
+            mouth: ["laughing", "smirk", "surprised" ],
+            baseColor: ["f9c9b6","F2CCB7"],
+            hairColor: ["000000"],
+            eyebrows: ["up", "eyelashesUp"],
+            eyes: ["eyes","eyesShadow","round", "smiling", "smilingShadow"],
+            nose: ["curve","pointed","tound"],
+            shirt: ["collared","crew","open"],
+            shirtColor: ["d2eff3","6bd9e9","9287ff", "e0ddff", "f4d150", "f9c9b6", "fc909f", "ffffff"],
         });
     }
 

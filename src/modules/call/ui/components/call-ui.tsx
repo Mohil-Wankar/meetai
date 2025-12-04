@@ -1,5 +1,4 @@
 import { StreamTheme, useCall } from "@stream-io/video-react-sdk";
-import { se } from "date-fns/locale";
 import { useState } from "react";
 import { CallLobby } from "./call-lobby";
 import { CallActive } from "./call-active";

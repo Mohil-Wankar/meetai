@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { and, eq, not } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { Chat, ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 import {
     MessageNewEvent,
@@ -17,10 +17,23 @@ import { agents, meetings } from "@/db/schema";
 import { streamVideo } from "@/lib/stream-video";
 import { inngest } from "@/inngest/client";
 import { generateAvatarUri } from "@/lib/avatar";
-import { ChannelList } from "stream-chat-react";
 import { streamChat } from "@/lib/stream-chat";
 
 const openaiclient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+// In-memory cache to prevent duplicate processing of messages
+const processedMessages = new Map<string, number>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Clean up old entries periodically
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, timestamp] of processedMessages.entries()) {
+        if (now - timestamp > CACHE_TTL) {
+            processedMessages.delete(key);
+        }
+    }
+}, 60 * 1000); // Clean up every minute
 
 function verifySignatureWithSDK(body: string, signature: string): boolean {
     return streamVideo.verifyWebhook(body, signature);
@@ -46,7 +59,7 @@ export async function POST(req: NextRequest) {
     let payload: unknown;
     try {
         payload = JSON.parse(body) as Record<string, unknown>;
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
@@ -195,8 +208,43 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Agent not found" }, { status: 404 });
         }
 
-        if (userId !== existingAgent.id) {
-            const instructions = `
+        if (userId === existingAgent.id) {
+            // Skip messages from the agent itself
+            return NextResponse.json({ status: "agent_message_skipped" });
+        }
+
+        // Check if this message has already been processed
+        const messageId = event.message?.id;
+        if (messageId && processedMessages.has(messageId)) {
+            return NextResponse.json({ status: "already_processing" });
+        }
+
+        // Mark message as being processed
+        if (messageId) {
+            processedMessages.set(messageId, Date.now());
+        }
+
+        const channel = streamChat.channel("messaging", channelId);
+        await channel.watch();
+
+        // Check if agent has already responded to this message
+        const allMessages = channel.state.messages;
+        const currentMessageIndex = allMessages.findIndex(msg => msg.id === event.message?.id);
+        
+        if (currentMessageIndex !== -1) {
+            // Look for any agent messages after this user message
+            const messagesAfterCurrent = allMessages.slice(currentMessageIndex + 1);
+            const agentAlreadyReplied = messagesAfterCurrent.some(
+                msg => msg.user?.id === existingAgent.id
+            );
+            
+            if (agentAlreadyReplied) {
+                // Agent has already responded to this message
+                return NextResponse.json({ status: "already_processed" });
+            }
+        }
+
+        const instructions = `
         You are an AI assistant helping the user revisit a recently completed meeting.
         Below is a summary of the meeting, generated from the transcript:
         
@@ -216,12 +264,10 @@ export async function POST(req: NextRequest) {
         Be concise, helpful, and focus on providing accurate information from the meeting and the ongoing conversation.
         `;
 
-        const channel = streamChat.channel("messaging", channelId);
-        await channel.watch();
-
         const previousMessages = channel.state.messages
-            .slice(-5)
             .filter((msg) => msg.text && msg.text.trim() !== "")
+            .filter((msg) => msg.id !== event.message?.id)
+            .slice(-5)
             .map<ChatCompletionMessageParam>((message) => ({
                 role: message.user?.id === existingAgent.id ? "assistant" : "user",
                 content: message.text || "",
@@ -250,21 +296,21 @@ export async function POST(req: NextRequest) {
             variant: "botttsNeutral",
         });
 
-        streamChat.upsertUser({
+        await streamChat.upsertUser({
             id: existingAgent.id,
             name: existingAgent.name,
             image: avatarUrl,
         });
 
-        channel.sendMessage({
+        await channel.sendMessage({
             text: GPTResponseText,
             user: {
                 id: existingAgent.id,
                 name: existingAgent.name,
                 image: avatarUrl,
             },
+            quoted_message_id: event.message?.id,
         });
-        }
     }
 
     return NextResponse.json({ status: "ok" });

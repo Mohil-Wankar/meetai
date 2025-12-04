@@ -1,4 +1,4 @@
-import { ChevronDownIcon, CreditCardIcon, LogOutIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, CreditCardIcon, LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -116,7 +116,7 @@ export const DashboardUserButton = () => {
                         {data.user.email}
                     </p>
                 </div>
-                <ChevronDownIcon className="size-4 shrink-0" />
+                <ChevronRightIcon className="size-4 shrink-0" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="right" className="w-72">
                 <DropdownMenuLabel>
