@@ -4,7 +4,6 @@ import { db } from "@/db";
 import { agents, meetings } from "@/db/schema";
 import { polarClient } from "@/lib/polar";
 import {
-    baseProcedure,
     createTRPCRouter,
     protectedProcedure,
 } from "@/trpc/init";

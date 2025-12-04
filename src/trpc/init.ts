@@ -3,7 +3,6 @@ import { agents, meetings } from '@/db/schema';
 import { auth } from '@/lib/auth';
 import { polarClient } from '@/lib/polar';
 import { MAX_FREE_AGENTS, MAX_FREE_MEETINGS } from '@/modules/premium/constants';
-import { shouldThrowError } from '@tanstack/react-query';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { count, eq } from 'drizzle-orm';
 import { headers } from 'next/headers';

@@ -1,4 +1,4 @@
-import { CircleCheckIcon, Variable } from "lucide-react";
+import { CircleCheckIcon } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
@@ -110,7 +110,9 @@ export const PricingCard = ({
                 </div>
             </div>
             <div className="py-6">
-                <Separator className="opacity-10 text-[#5D6B68]" />
+                <Separator className={cn(
+                    variant === "highlighted" ? "bg-neutral-600" : "bg-neutral-200"
+                )} />
             </div>
             <Button 
                 className="w-full"
@@ -121,7 +123,7 @@ export const PricingCard = ({
                 {buttonText}
             </Button>
             <div className="flex flex-col gap-y-2 mt-6">
-                <p className="font-medium, uppercase">Features</p>
+                <p className="font-medium uppercase">Features</p>
                 <ul
                     className={cn(
                         "flex flex-col gap-y-2.5",
